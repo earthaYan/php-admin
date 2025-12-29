@@ -1,8 +1,11 @@
-import { $post } from "@utils/request";
-import { type ILoginParams } from "./index.d";
+import { $post, $get } from "@utils/request";
+import { type ILoginParams, type IUserInfo } from "./index.d";
 
 export const UserLogin = (data: ILoginParams) => {
   return $post<string>("/users/login", data);
 };
 
-export { type ILoginParams };
+export const getUserInfo = () => {
+  return $get<IUserInfo>("/users/getUserInfo");
+};
+export * from "./index.d";

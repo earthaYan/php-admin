@@ -2,18 +2,27 @@ import { Button, Dropdown, type MenuProps } from "antd";
 import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 import styles from "./index.module.less";
 import storage from "@/utils/storage";
-import { useBaseStore } from "@/store";
+import { useBaseStore, useUserStore } from "@/store";
+import { getUserInfo } from "@/api/users";
+import { useEffect } from "react";
 
 const Header = () => {
   const { collapsed, updateCollapsed } = useBaseStore();
+  const { userInfo, updateUserInfo } = useUserStore();
   const toggleCollapsed = () => {
     updateCollapsed();
   };
-
+  const getUser = async () => {
+    const info = await getUserInfo();
+    updateUserInfo(info);
+  };
+  useEffect(() => {
+    getUser();
+  }, []);
   const items: MenuProps["items"] = [
     {
       key: "email",
-      label: "邮箱：dawei@gami.com",
+      label: userInfo?.userEmail,
     },
     {
       key: "logout",
