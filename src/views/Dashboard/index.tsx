@@ -20,6 +20,7 @@ import {
 } from "@/api/dashboard";
 import { useUserStore } from "@/store";
 import { stateMap } from "./index.data";
+import { useEcharts } from "@/hooks/useEcharts";
 
 const Dashboard = () => {
   const { userInfo } = useUserStore();
@@ -58,58 +59,147 @@ const Dashboard = () => {
     ],
     [userInfo]
   );
-  const lineRef = useRef(null);
-  const frontRef = useRef(null);
-  const backRef = useRef(null);
-  const radarRef = useRef(null);
+  const [lineRef, lineChart] = useEcharts();
+  const [frontRef, frontChart] = useEcharts();
+  const [backRef, backChart] = useEcharts();
+  const [radarRef, radarChart] = useEcharts();
 
   const [reportData, setReportData] = useState<IReportData>();
-  const [lineChartData, setLineChartData] = useState<ILineChartData>();
-  const [pieCity, setPieCity] = useState<IPieData[]>([]);
-  const [pieAge, setPieAge] = useState<IPieData[]>([]);
-  const [radarData, setRadarData] = useState<IRadarResponse>();
 
   const getReport = async () => {
     const res = await getReportData();
     setReportData(res);
   };
 
-  const getLineChart = async () => {
-    const res = await getLineChartData();
-    setLineChartData(res);
-  };
-  const getRadarChart = async () => {
-    const res = await getRadarData();
-    setRadarData(res);
+  const renderPieChart = async () => {
+    if (frontChart) {
+      const res = await getPieCityData();
+      frontChart.setOption({
+        title: {
+          text: "前端",
+        },
+        tooltip: {
+          trigger: "item",
+        },
+        legend: {
+          left: "default",
+        },
+        series: [
+          {
+            type: "pie",
+            radius: "50%",
+            data: res,
+            emphasis: {
+              itemStyle: {
+                shadowBlur: 10,
+                shadowOffsetX: 0,
+                shadowColor: "rgba(0, 0, 0, 0.5)",
+              },
+            },
+          },
+        ],
+      });
+    }
+    if (backChart) {
+      const res = await getPieAgeData();
+      backChart.setOption({
+        title: {
+          text: "后端",
+        },
+        tooltip: {
+          trigger: "item",
+        },
+        legend: {
+          left: "default",
+        },
+        series: [
+          {
+            type: "pie",
+            radius: "50%",
+            data: res,
+            emphasis: {
+              itemStyle: {
+                shadowBlur: 10,
+                shadowOffsetX: 0,
+                shadowColor: "rgba(0, 0, 0, 0.5)",
+              },
+            },
+          },
+        ],
+      });
+    }
   };
 
-  const getPieCity = async () => {
-    const res = await getPieCityData();
-    setPieCity(res);
-  };
-  const getPieAge = async () => {
-    const res = await getPieAgeData();
-    setPieAge(res);
+  const renderLineChart = async () => {
+    if (lineChart) {
+      const res = await getLineChartData();
+
+      lineChart.setOption({
+        tooltip: {
+          trigger: "axis",
+        },
+        legend: {
+          data: ["订单", "流水"],
+        },
+        grid: {
+          left: "3%",
+          right: "4%",
+          bottom: "20%",
+        },
+        xAxis: {
+          type: "category",
+          boundaryGap: false,
+          data: res?.label,
+        },
+        yAxis: {
+          type: "value",
+        },
+        series: [
+          {
+            name: "订单",
+            type: "line",
+            data: res.order,
+          },
+          {
+            name: "流水",
+            type: "line",
+            data: res.money,
+          },
+        ],
+      });
+    }
   };
 
-  const renderPieChart = () => {
-    getPieCity();
-    getPieAge();
-  };
-  const renderRadarChart = () => {
-    getRadarChart();
-  };
-  const renderLineChart = () => {
-    getLineChart();
+  const renderRadarChart = async () => {
+    if (radarChart) {
+      const res = await getRadarData();
+      radarChart.setOption({
+        tooltip: {
+          trigger: "item",
+        },
+        radar: {
+          indicator: res.indicator,
+        },
+        series: [
+          {
+            type: "radar",
+            data: res.data,
+          },
+        ],
+      });
+    }
   };
 
   useEffect(() => {
     getReport();
-    getLineChart();
-    getPieCity();
-    getPieAge();
-    getRadarChart();
   }, []);
+
+  useEffect(() => {
+    renderLineChart();
+    renderPieChart();
+    renderRadarChart();
+  }, [lineChart, frontChart, backChart, radarChart]);
+
   return (
     <div className={styles.dashboard}>
       <div className={styles.userInfo}>
@@ -141,7 +231,11 @@ const Dashboard = () => {
       <div className={styles.chart}>
         <Card
           title="消费流水"
-          extra={<Button onClick={renderLineChart}>刷新</Button>}
+          extra={
+            <Button type="primary" onClick={renderLineChart}>
+              刷新
+            </Button>
+          }
         >
           <div ref={lineRef} className={styles.lineChart}></div>
         </Card>
@@ -149,7 +243,11 @@ const Dashboard = () => {
       <div className={styles.chart}>
         <Card
           title="程序员top6"
-          extra={<Button onClick={renderPieChart}>刷新</Button>}
+          extra={
+            <Button type="primary" onClick={renderPieChart}>
+              刷新
+            </Button>
+          }
         >
           <div className={styles.pieChart}>
             <div ref={frontRef} className={styles.pieItem}></div>
@@ -160,7 +258,11 @@ const Dashboard = () => {
       <div className={styles.chart}>
         <Card
           title="技能雷达图"
-          extra={<Button onClick={renderRadarChart}>刷新</Button>}
+          extra={
+            <Button type="primary" onClick={renderRadarChart}>
+              刷新
+            </Button>
+          }
         >
           <div ref={radarRef} className={styles.radarChart}></div>
         </Card>
