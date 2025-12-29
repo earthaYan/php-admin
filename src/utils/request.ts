@@ -1,40 +1,68 @@
 import { message } from "antd";
-import axios from "axios";
+import axios, { AxiosError, type AxiosResponse } from "axios";
+import storage from "./storage";
+import type { CommonResponse } from "@/types/api";
 
 const apiURL = import.meta.env.VITE_APP_API_BASE_URL;
 
-const instance = axios.create({
+export const instance = axios.create({
   baseURL: apiURL,
   timeout: 3000,
   timeoutErrorMessage: "请求超时!!!",
   withCredentials: true, //允许携带cookie
 });
 
-instance.interceptors.request.use((config) => {
-  return config;
-});
+instance.interceptors.request.use(
+  (config) => {
+    const token = storage.get("token");
+    if (token) {
+      config.headers.Authorization = "Bearer " + token;
+    }
+
+    return config;
+  },
+  (error: AxiosError) => {
+    return Promise.reject(error);
+  }
+);
 
 instance.interceptors.response.use(
-  (response) => {
-    const data = response.data;
-    if (data.code === 401) {
-      window.location.href = "/login";
-    } else if (data.code !== 200) {
-      message.error(data.msg);
+  (response: AxiosResponse<CommonResponse<unknown>>) => {
+    const res = response.data;
+    const { code, msg } = res;
+
+    if (code !== 200) {
+      message.error(msg);
+      return Promise.reject(new Error(msg));
     }
-    return data.data;
+
+    return response;
   },
-  (err) => {
+  (err: AxiosError<CommonResponse<unknown>>) => {
+    const errorMessage = err.message ?? err.response?.data.msg ?? "请求失败";
+    message.error(errorMessage);
+
+    if (
+      (err.status === 401 || err.response?.status === 401) &&
+      location.pathname !== "/login"
+    ) {
+      storage.remove("token");
+      window.location.href = "/login";
+    }
+
     return Promise.reject(err);
   }
 );
 
-export default {
-  instance,
-  get: (url: string, params?: object) => {
-    return instance.get(url, { params });
-  },
-  post: (url: string, data?: object) => {
-    return instance.post(url, { data });
-  },
+export const $get = async <T>(
+  url: string,
+  params?: Record<string, unknown>
+): Promise<T> => {
+  const response = await instance.get<CommonResponse<T>>(url, { params });
+  return response.data.data;
+};
+
+export const $post = async <T>(url: string, data?: unknown): Promise<T> => {
+  const response = await instance.post<CommonResponse<T>>(url, data);
+  return response.data.data;
 };

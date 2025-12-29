@@ -1,7 +1,11 @@
 import "./App.css";
-
+import Login from "./views/Login";
 function App() {
-  return <>app</>;
+  return (
+    <>
+      <Login />
+    </>
+  );
 }
 
 export default App;
