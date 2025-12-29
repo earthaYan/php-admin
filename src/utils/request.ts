@@ -54,10 +54,7 @@ instance.interceptors.response.use(
   }
 );
 
-export const $get = async <T>(
-  url: string,
-  params?: Record<string, unknown>
-): Promise<T> => {
+export const $get = async <T>(url: string, params?: unknown): Promise<T> => {
   const response = await instance.get<CommonResponse<T>>(url, { params });
   return response.data.data;
 };

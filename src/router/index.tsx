@@ -35,7 +35,7 @@ const routes: RouteObject[] = [
       },
     ],
   },
-  { path: "/", element: <Navigate to="/welcome" /> },
+  { path: "/", element: <Navigate to="/dashboard" /> },
   { path: "/login", element: <Login /> },
   {
     path: "*",
