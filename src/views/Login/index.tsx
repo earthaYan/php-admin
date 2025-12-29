@@ -1,5 +1,5 @@
 import { Button, Form, Input, type FormProps } from "antd";
-import "./index.less";
+import styles from "./index.module.less";
 import { UserLogin, type ILoginParams } from "@/api/users";
 import storage from "@/utils/storage";
 
@@ -7,6 +7,8 @@ const Login = () => {
   const onFinish: FormProps<ILoginParams>["onFinish"] = async (values) => {
     const token = await UserLogin(values);
     storage.set("token", token);
+
+    window.location.href = "/";
   };
 
   const onFinishFailed: FormProps<ILoginParams>["onFinishFailed"] = (
@@ -16,9 +18,9 @@ const Login = () => {
   };
 
   return (
-    <div className="login">
-      <div className="login-wrapper">
-        <div className="title">登录界面</div>
+    <div className={styles.login}>
+      <div className={styles.loginWrapper}>
+        <div className={styles.title}>登录界面</div>
         <Form
           name="basic"
           onFinish={onFinish}
